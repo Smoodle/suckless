@@ -37,6 +37,7 @@ static const Rule rules[] = {
 	/* class      instance    title       tags mask     isfloating   monitor */
 	{ "Thunderbird",  NULL,       NULL,       1 << 7,       0,           -1 },
 	{ "qBittorrent",  NULL,       NULL,       1 << 8,       0,           -1 },
+	{ "mpv",          NULL,       NULL,       0,            1,           -1 },
 };
 
 /* layout(s) */
@@ -72,8 +73,9 @@ static Key keys[] = {
 	/* modifier                     key        function        argument */
     { MODKEY,                       XK_p,      spawn,          SHCMD("sh ~/.scripts/dmenu/dmenu_run_history")  },
     { MODKEY,                       XK_v,      spawn,          SHCMD("mullvad-vpn")  },
-    { MODKEY,                       XK_e,      spawn,          SHCMD("thunar")  },
-    { MODKEY,                       XK_a,      spawn,          SHCMD("sh ~/.scripts/mpv_picker ~/Misc/Anime")  },
+    { MODKEY,                       XK_e,      spawn,          SHCMD("emacsclient -c -a 'emacs'")  },
+    { MODKEY,                       XK_n,      spawn,          SHCMD("thunar")  },
+    { MODKEY,                       XK_a,      spawn,          SHCMD("sh ~/.scripts/mpv_picker ~/Media/Anime")  },
     { MODKEY|ShiftMask,             XK_q,      spawn,          SHCMD("sh ~/.scripts/dmenu/dmenu_shutdown")  },
     { MODKEY|ShiftMask,             XK_p,      spawn,          SHCMD("sh ~/.scripts/screenshot")  },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
@@ -129,4 +131,12 @@ static Button buttons[] = {
 	{ ClkTagBar,            0,              Button3,        toggleview,     {0} },
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
+};
+
+/* signal definitions */
+/* signum must be greater than 0 */
+/* trigger signals using `xsetroot -name "fsignal:<signum>"` */
+static Signal signals[] = {
+	/* signum       function        argument  */
+	{ 1,            quit,           {0} },
 };
