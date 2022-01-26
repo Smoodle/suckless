@@ -489,46 +489,58 @@ attachstack(Client *c)
 	c->mon->stack = c;
 }
 
-void
-buttonpress(XEvent *e)
-{
-	unsigned int i, x, click;
-	Arg arg = {0};
-	Client *c;
-	Monitor *m;
-	XButtonPressedEvent *ev = &e->xbutton;
+void buttonpress(XEvent *e) {
+  unsigned int i, x, click, occ = 0;
+  Arg arg = {0};
+  Client *c;
+  Monitor *m;
+  XButtonPressedEvent *ev = &e->xbutton;
 
-	click = ClkRootWin;
-	/* focus monitor if necessary */
-	if ((m = wintomon(ev->window)) && m != selmon) {
-		unfocus(selmon->sel, 1);
-		selmon = m;
-		focus(NULL);
-	}
-	if (ev->window == selmon->barwin) {
-		i = x = 0;
-		do
+  click = ClkRootWin;
+  /* focus monitor if necessary */
+  if ((m = wintomon(ev->window)) && m != selmon) {
+	unfocus(selmon->sel, 1);
+	selmon = m;
+	focus(NULL);
+  }
+  if (ev->window == selmon->barwin) {
+	i = x = 0;
+	if (hidevacanttags == 1) {
+	  for (c = m->clients; c; c = c->next)
+		occ |= c->tags == 255 ? 0 : c->tags;
+	  do {
+		/* do not reserve space for vacant tags */
+		if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+		  continue;
 		x += TEXTW(tags[i]);
-		while (ev->x >= x && ++i < LENGTH(tags));
-		if (i < LENGTH(tags)) {
-			click = ClkTagBar;
-			arg.ui = 1 << i;
-		} else if (ev->x < x + blw)
-		click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext) - getsystraywidth())
-		click = ClkStatusText;
-		else
-		click = ClkWinTitle;
-	} else if ((c = wintoclient(ev->window))) {
-		focus(c);
-		restack(selmon);
-		XAllowEvents(dpy, ReplayPointer, CurrentTime);
-		click = ClkClientWin;
+	  } while (ev->x >= x && ++i < LENGTH(tags));
+	} else {
+	  do
+		x += TEXTW(tags[i]);
+	  while (ev->x >= x && ++i < LENGTH(tags));
 	}
-	for (i = 0; i < LENGTH(buttons); i++)
-	if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
-	&& CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
-	buttons[i].func(click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
+
+	if (i < LENGTH(tags)) {
+	  click = ClkTagBar;
+	  arg.ui = 1 << i;
+	} else if (ev->x < x + blw)
+	  click = ClkLtSymbol;
+	else if (ev->x > selmon->ww - (int)TEXTW(stext) - getsystraywidth())
+	  click = ClkStatusText;
+	else
+	  click = ClkWinTitle;
+  } else if ((c = wintoclient(ev->window))) {
+	focus(c);
+	restack(selmon);
+	XAllowEvents(dpy, ReplayPointer, CurrentTime);
+	click = ClkClientWin;
+  }
+  for (i = 0; i < LENGTH(buttons); i++)
+	if (click == buttons[i].click && buttons[i].func &&
+		buttons[i].button == ev->button &&
+		CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
+	  buttons[i].func(
+		  click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
 }
 
 void
@@ -971,23 +983,36 @@ drawbar(Monitor *m)
 	}
 
 	resizebarwin(m);
-	for (c = m->clients; c; c = c->next) {
-		occ |= c->tags;
-		if (c->isurgent)
-		urg |= c->tags;
-	}
-	x = 0;
-	for (i = 0; i < LENGTH(tags); i++) {
-		w = TEXTW(tags[i]);
-		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
-		if (occ & 1 << i)
-			drw_rect(drw, x + boxw, 0, w - ( 2 * boxw + 1), boxw,
-			m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-			urg & 1 << i);
-		x += w;
-	}
-	w = blw = TEXTW(m->ltsymbol);
+		for (c = m->clients; c; c = c->next) {
+		  if (hidevacanttags == 1)
+			occ |= c->tags == 255 ? 0 : c->tags;
+		  else
+			occ |= c->tags;
+          if (c->isurgent)
+            urg |= c->tags;
+        }
+		x = 0;
+		for (i = 0; i < LENGTH(tags); i++) {
+		  if (hidevacanttags == 1) {
+			/* do not draw vacant tags */
+			if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+              continue;
+          }
+          w = TEXTW(tags[i]);
+          drw_setscheme(
+              drw,
+              scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
+          drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+		  if(hidevacanttags == 0) {
+
+          if (occ & 1 << i)
+            drw_rect(drw, x + boxw, 0, w - (2 * boxw + 1), boxw,
+                     m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
+                     urg & 1 << i);
+		  }
+          x += w;
+        }
+        w = blw = TEXTW(m->ltsymbol);
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
@@ -1461,18 +1486,16 @@ maprequest(XEvent *e)
 	manage(ev->window, &wa);
 }
 
-void
-monocle(Monitor *m)
-{
-	unsigned int n = 0;
-	Client *c;
+void monocle(Monitor *m) {
+  unsigned int n = 0;
+  Client *c;
 
-	for (c = m->clients; c; c = c->next)
+  for (c = m->clients; c; c = c->next)
 	if (ISVISIBLE(c))
-	n++;
-	if (n > 0) /* override layout symbol */
+	  n++;
+  if (n > 0 && replacemonocle == 1) /* override layout symbol */
 	snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d]", n);
-	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
+  for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
 	resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, 0);
 }
 
