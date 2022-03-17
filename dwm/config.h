@@ -75,7 +75,7 @@ static const char *termcmd[]  = { "alacritty", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
-    { MODKEY,                       XK_p,      spawn,          SHCMD("sh ~/.scripts/dmenu/dmenu_run_history")  },
+    { MODKEY,                       XK_p,      spawn,          SHCMD("rofi -show drun")  },
     { MODKEY,                       XK_v,      spawn,          SHCMD("mullvad-vpn")  },
     { MODKEY,                       XK_e,      spawn,          SHCMD("emacsclient -c -a 'emacs'")  },
     { MODKEY,                       XK_n,      spawn,          SHCMD("thunar")  },
