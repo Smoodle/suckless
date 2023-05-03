@@ -1,0 +1,7 @@
+dwm
+.cache/
+dwm.o
+drw.o
+util.o
+config.h
+compile_commands.json

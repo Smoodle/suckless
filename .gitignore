@@ -1,2 +1,10 @@
 *.o
 .ccls-cache/
+
+dwm/dwm
+dwm/.cache/
+dwm/dwm.o
+dwm/drw.o
+dwm/util.o
+dwm/config.h
+dwm/compile_commands.json

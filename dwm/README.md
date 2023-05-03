@@ -46,3 +46,15 @@ Configuration
 -------------
 The configuration of dwm is done by creating a custom config.h
 and (re)compiling the source code.
+
+Patches 
+------------
+
+* statuspadding
+* cfacts
+* vanity gaps
+* pertag
+* fullscreen patch compilation by [bakkeby/patches](https://github.com/bakkeby/patches/blob/master/dwm/dwm-fullscreen-compilation-6.2.diff)
+* status2d with systray
+* statusallmons
+* smartborders
